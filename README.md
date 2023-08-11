@@ -24,6 +24,7 @@ Set's Correct Date and Time<br>
 Enables Network Discovery<br>
 Enables File and Printer Sharing<br>
 Initiates Windows Update in the background<br>
+
 ---Software Downloaded/Installed---<br>
 
 --ALL--<br>
@@ -36,7 +37,7 @@ ADWCleaner<br>
 Malwarebytes<br>
 VLC<br>
 
-BUSINESS--<br>
+--BUSINESS--<br>
 GotoAssist<br>
 Open Webpage for Avast Business AV<br>
 
