@@ -1,4 +1,4 @@
-# InitialSetup
+# InitialSetup.cmd and InitialSetupB.cmd
 
 This is an example CMD script that can be adapted to suit your needs. 
 
