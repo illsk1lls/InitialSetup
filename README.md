@@ -1,13 +1,12 @@
 # InitialSetup.cmd and InitialSetupB.cmd, for Win8-11
 
-If the file is renamed to contain a "B" or "b" at the end of the filename it will switch actions from business/non-business (e.g InitialSetup.cmd and InitialSetupB.cmd)
+If the file is renamed to contain a "B" or "b" at the end of the filename it will switch actions from business/non-business (e.g InitialSetup.cmd and InitialSetupB.cmd)<br>
 
 This is an example CMD script that can be adapted to suit your needs.<br>
 
 It is possible to run this CMD script from a USB and remove the USB while it is running, when launched it copies itself into %ProgramData% and runs that, when completed it deletes its temporary version. The file you actually click runs for only a second or so and closes, so you won't get stuck on a slow workstation or have to copy the script every time before you use it.<br>
 
 This template can be run on new machines to adjust some commonly changed settings quickly.<br>
-Business and Non-Business example sections are present.<br>
 
 Actions the script performs in this example state:<br>
 
