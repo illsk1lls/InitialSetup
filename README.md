@@ -1,6 +1,6 @@
 # InitialSetup.cmd and InitialSetupB.cmd, for Win8-11
 
-If the file is renamed to contain a "B" or "b" at the end of the filename it will switch actions from business/non-business (e.g InitialSetup.cmd and InitialSetupB.cmd)<br>
+If the CMD script is renamed to contain a "B" or "b" at the end of the filename it will switch actions from business/non-business (e.g InitialSetup.cmd and InitialSetupB.cmd)<br>
 
 This is an example CMD script that can be adapted to suit your needs.<br>
 
