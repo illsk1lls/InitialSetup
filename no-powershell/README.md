@@ -1,4 +1,5 @@
 # InitialSetup.cmd and InitialSetupB.cmd, for Win8-11
+(non-powershell version)
 
 If the file is renamed to contain a "B" or "b" at the end of the filename it will switch actions from business/non-business (e.g InitialSetup.cmd and InitialSetupB.cmd)<br>
 
