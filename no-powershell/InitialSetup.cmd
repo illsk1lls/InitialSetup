@@ -124,12 +124,7 @@ DEL "%ProgramData%\InitialSetup\vlc-3.0.18-win64.exe" /F /Q>nul
 )
 IF "%RUNMODE%"=="B" (
 ::Business Example Section
-BITSADMIN /transfer "Aria2c" /download /priority FOREGROUND "https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip" "%ProgramData%\InitialSetup\Aria2c.zip"
-"C:\Program Files\7-Zip\7z.exe" e -y "%ProgramData%\InitialSetup\Aria2c.zip" Aria2c.exe -r>nul
-DEL "%ProgramData%\InitialSetup\Aria2c.zip" /F /Q
-ECHO. & ECHO Using Aria2c to Download GoToAssist...
-"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://fastsupport.gotoassist.com/download/unattendedDownloadAuto -o g2ax_unattended.exe
-DEL "%ProgramData%\InitialSetup\aria2c.exe" /F /Q
+BITSADMIN /transfer "GoToAssist" /download /priority FOREGROUND /dynamic "https://fastsupport.gotoassist.com/download/unattendedDownloadAuto" "%ProgramData%\InitialSetup\g2ax_unattended.exe"
 ECHO. & ECHO Installing GoToAssist...
 START /WAIT "" "%ProgramData%\InitialSetup\g2ax_unattended.exe" /verysilent /norestart
 DEL "%ProgramData%\InitialSetup\g2ax_unattended.exe" /F /Q
