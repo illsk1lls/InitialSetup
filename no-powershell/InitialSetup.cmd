@@ -98,7 +98,7 @@ ECHO. & ECHO Installing 7-Zip...
 START /WAIT "" "%ProgramData%\InitialSetup\7z2300-x64.exe" /S>nul
 DEL "%ProgramData%\InitialSetup\7z2300-x64.exe" /F /Q>nul
 BITSADMIN /transfer "Google Chrome" /download /priority FOREGROUND "https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B01BE02E1-8E3F-B3BD-885C-6A7E4415E17F%7D%26lang%3Den%26browser%3D5%26usagestats%3D0%26appname%3DGoogle%2520Chrome%26needsadmin%3Dtrue%26ap%3Dx64-stable-statsdef_0%26brand%3DGCEB/dl/chrome/install/GoogleChromeEnterpriseBundle64.zip" "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip"
-"C:\Program Files\7-Zip\7z.exe" e "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" GoogleChromeStandaloneEnterprise64.msi -r>nul
+"C:\Program Files\7-Zip\7z.exe" e -y "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" GoogleChromeStandaloneEnterprise64.msi -r>nul
 DEL "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" /F /Q>nul
 ECHO. & ECHO Installing Google Chrome...
 START /WAIT "" "%ProgramData%\InitialSetup\GoogleChromeStandaloneEnterprise64.msi" /qn /norestart>nul
