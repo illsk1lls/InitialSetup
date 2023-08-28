@@ -17,13 +17,11 @@ TITLE Initial Setup v1.1
 ::Copy to program data and run from there. This allows you to run from USB and remove it while the script is running.
 CD /D %~dp0
 IF NOT "%~f0" EQU "%ProgramData%\%~nx0" (
-IF EXIST "%ProgramData%\InitialSetup" RD "%ProgramData%\InitialSetup" /S /Q>nul
-MD "%ProgramData%\InitialSetup">nul
 COPY /Y "%~f0" "%ProgramData%">nul
 START "" "%ProgramData%\%~nx0"
 EXIT /b
 )
-PUSHD "%ProgramData%\InitialSetup"
+(IF EXIST "%ProgramData%\InitialSetup" (RD "%ProgramData%\InitialSetup" /S /Q>nul)) & MD "%ProgramData%\InitialSetup">nul & PUSHD "%ProgramData%\InitialSetup"
 ECHO Checking System...
 FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul`) DO set "ProductName=%%i %%j"
 IF "%ProductName%"=="Windows 7" ECHO. & ECHO Windows 7 detected. & ECHO. & ECHO SYSTEM NOT SUPPORTED! & ECHO. & PAUSE & EXIT
