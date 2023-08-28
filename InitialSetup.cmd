@@ -16,12 +16,12 @@ TITLE Initial Setup v1.1
 )
 CD /D %~dp0
 IF NOT "%~f0" EQU "%ProgramData%\%~nx0" (
-IF EXIST "%ProgramData%\InitialSetup" RD "%ProgramData%\InitialSetup" /S /Q>nul
-MD "%ProgramData%\InitialSetup\Junkbin">nul
 COPY /Y "%~f0" "%ProgramData%">nul
 START "" "%ProgramData%\%~nx0"
 EXIT /b
 )
+IF EXIST "%ProgramData%\InitialSetup" RD "%ProgramData%\InitialSetup" /S /Q>nul
+MD "%ProgramData%\InitialSetup\Junkbin">nul
 ECHO Checking System...
 FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul`) DO set "ProductName=%%i %%j"
 IF "%ProductName%"=="Windows 7" ECHO. & ECHO Windows 7 detected. & ECHO. & ECHO SYSTEM NOT SUPPORTED! & ECHO. & PAUSE & EXIT
