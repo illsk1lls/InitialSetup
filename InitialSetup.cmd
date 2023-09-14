@@ -139,6 +139,6 @@ ECHO. & ECHO Starting GoToAssist Download...
 ECHO. & ECHO Installing GoToAssist Unattended...
 START /WAIT "" "%ProgramData%\InitialSetup\g2ax_unattended.exe"
 ECHO. & ECHO Complete!
-START https://us.cloudcare.avg.com/#/
+START "" https://us.cloudcare.avg.com/#/
 )
 POPD & RD "%ProgramData%\InitialSetup" /S /Q>nul & (GOTO) 2>nul & del "%~f0">nul & EXIT
