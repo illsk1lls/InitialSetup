@@ -28,7 +28,7 @@ ECHO Checking System...
 FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul`) DO set "ProductName=%%i %%j"
 IF "%ProductName%"=="Windows 7" ECHO. & ECHO Windows 7 detected. & ECHO. & ECHO SYSTEM NOT SUPPORTED! & ECHO. & PAUSE & EXIT
 ::Win 11 Specific Fixes
-POWERSHELL -nop -c "Get-WmiObject -Class Win32_OperatingSystem | Format-List -Property Caption" | find "Windows 11" > nul
+POWERSHELL -nop -ep bypass -c "Get-WmiObject -Class Win32_OperatingSystem | Format-List -Property Caption" | find "Windows 11" > nul
 IF %errorlevel% == 0 ECHO. & ECHO Windows 11 detected. Fixing File Explorer... & reg.exe ADD HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32 /t REG_SZ /d "" /f>nul & reg.exe ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v UseCompactMode /t REG_DWORD /d 1 /f>nul
 ::All machines get these settings
 ECHO. & ECHO Disabling Device Encryption...
@@ -41,7 +41,7 @@ ECHO. & ECHO Enabling System Restore and Creating a Restore Point...
 POWERSHELL -nop -c "Enable-ComputerRestore -Drive 'C:\'">nul
 ::SMBv1 Option Disabled by default, un-comment next 2 lines to enable
 ::ECHO. & ECHO Enabling SMBv1...
-::POWERSHELL -nop -c "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Client -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Server -NoRestart"; "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Deprecation -NoRestart">nul
+::POWERSHELL -nop -ep bypass -c "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Client -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Server -NoRestart"; "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Deprecation -NoRestart">nul
 ECHO. & ECHO Setting Power Options...
 powercfg /change monitor-timeout-ac 0
 powercfg /change monitor-timeout-dc 0
@@ -94,7 +94,7 @@ ECHO. & ECHO Running Windows Update...
 wuauclt /resetauthorization /detectnow /updatenow
 ECHO. & ECHO Preparing for Software Downloads...
 PUSHD "%ProgramData%\InitialSetup" & PUSHD "%ProgramData%\InitialSetup\Junkbin"
-POWERSHELL -nop -c "Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -o '7zr.exe'"; "Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2300-extra.7z -o '7zExtra.7z'"; "Invoke-WebRequest -Uri https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip -o 'Aria2c.zip'"
+POWERSHELL -nop -ep bypass -c "Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -o '7zr.exe'"; "Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2300-extra.7z -o '7zExtra.7z'"; "Invoke-WebRequest -Uri https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip -o 'Aria2c.zip'"
 7zr.exe e -y 7zExtra.7z>nul & 7za.exe e Aria2c.zip Aria2c.exe -r>nul
 MOVE 7za.* ..>nul & MOVE Aria2c.exe ..>nul & POPD
 ECHO. & ECHO Starting 7-Zip Download...
