@@ -8,8 +8,7 @@ SET TZNAME="Eastern Standard Time"
 ::InitialSetup can be run two ways. Business and Non-Business. Add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything.)
 SET RUNMODE=%~n0
 SET RUNMODE=%RUNMODE:~-1%
-IF "%RUNMODE%"=="b" SET "RUNMODE=B"
-IF "%RUNMODE%"=="B" (
+IF /I "%RUNMODE%"=="B" (
 TITLE Initial Setup for Business v1.1
 ) ELSE (
 TITLE Initial Setup v1.1
