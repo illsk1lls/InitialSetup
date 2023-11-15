@@ -129,7 +129,7 @@ ECHO. & ECHO Complete!
 ECHO. & ECHO Starting VLC Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://mirror.clarkson.edu/videolan/vlc/3.0.20/win64/vlc-3.0.20-win64.exe
 ECHO. & ECHO Installing VLC...
-START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.18-win64.exe" /S
+START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe" /S
 ECHO. & ECHO Complete!
 )
 IF "%RUNMODE%"=="B" (
