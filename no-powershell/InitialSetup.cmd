@@ -2,13 +2,13 @@
 ::Request admin if not
 >nul 2>&1 reg add hkcu\software\classes\.InitSetup\shell\runas\command /f /ve /d "cmd /x /d /r set \"f0=%%2\"& call \"%%2\" %%3"& set _= %*
 >nul 2>&1 fltmc|| if "%f0%" neq "%~f0" (cd.>"%ProgramData%\runas.InitSetup" & start "%~n0" /high "%ProgramData%\runas.InitSetup" "%~f0" "%_:"=""%" & exit /b)
+::Exit here if admin not approved
 >nul 2>&1 reg delete hkcu\software\classes\.InitSetup\ /f &>nul 2>&1 del %ProgramData%\runas.InitSetup /f /q
 ::Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
 SET TZNAME="Eastern Standard Time"
 ::InitialSetup can be run two ways. Business and Non-Business. Add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything.)
 SET RUNMODE=%~n0
-SET RUNMODE=%RUNMODE:~-1%
-IF "%RUNMODE%"=="b" SET "RUNMODE=B"
+IF "%RUNMODE:~-1%"=="b" SET "RUNMODE=B"
 IF "%RUNMODE%"=="B" (
 TITLE Initial Setup for Business v1.1
 ) ELSE (
@@ -96,38 +96,30 @@ CLS & ECHO. & ECHO Preparing for Software Downloads...
 BITSADMIN /transfer "7-Zip" /download /priority FOREGROUND "https://www.7-zip.org/a/7z2300-x64.exe" "%ProgramData%\InitialSetup\7z2300-x64.exe"
 ECHO. & ECHO Installing 7-Zip...
 START /WAIT "" "%ProgramData%\InitialSetup\7z2300-x64.exe" /S>nul
-DEL "%ProgramData%\InitialSetup\7z2300-x64.exe" /F /Q>nul
 BITSADMIN /transfer "Google Chrome" /download /priority FOREGROUND "https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B01BE02E1-8E3F-B3BD-885C-6A7E4415E17F%7D%26lang%3Den%26browser%3D5%26usagestats%3D0%26appname%3DGoogle%2520Chrome%26needsadmin%3Dtrue%26ap%3Dx64-stable-statsdef_0%26brand%3DGCEB/dl/chrome/install/GoogleChromeEnterpriseBundle64.zip" "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip"
 "C:\Program Files\7-Zip\7z.exe" e -y "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" GoogleChromeStandaloneEnterprise64.msi -r>nul
-DEL "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" /F /Q>nul
 ECHO. & ECHO Installing Google Chrome...
 START /WAIT "" "%ProgramData%\InitialSetup\GoogleChromeStandaloneEnterprise64.msi" /qn /norestart>nul
-DEL "%ProgramData%\InitialSetup\GoogleChromeStandaloneEnterprise64.msi" /F /Q>nul
 BITSADMIN /transfer "ADW Cleaner" /download /priority FOREGROUND "https://adwcleaner.malwarebytes.com/adwcleaner?channel=release" "%ProgramData%\InitialSetup\ADWCleaner.exe"
 ECHO. & ECHO Installing ADW Cleaner...
 START /WAIT "" "%ProgramData%\InitialSetup\ADWCleaner.exe" /eula /clean /noreboot /preinstalled>nul
-DEL "%ProgramData%\InitialSetup\ADWCleaner.exe" /F /Q>nul
 BITSADMIN /transfer "Adobe Reader DC" /download /priority FOREGROUND "http://ardownload.adobe.com/pub/adobe/reader/win/AcrobatDC/2000920063/AcroRdrDC2000920063_en_US.exe" "%ProgramData%\InitialSetup\AcroRdrDC2000920063_en_US.exe"
 ECHO. & ECHO Installing Adobe Reader DC...
 START /WAIT "" "%ProgramData%\InitialSetup\AcroRdrDC2000920063_en_US.exe" /sAll /rs /msi EULA_ACCEPT=YES
-DEL "%ProgramData%\InitialSetup\AcroRdrDC2000920063_en_US.exe" /F /Q>nul
 IF NOT "%RUNMODE%"=="B" (
 ::Non-Business Example Section
 BITSADMIN /transfer "Malwarebytes" /download /priority FOREGROUND "https://www.malwarebytes.com/api/downloads/mb-windows?filename=MBSetup.exe" "%ProgramData%\InitialSetup\MBSetup.exe"
 ECHO. & ECHO Installing Malwarebytes...
 START /WAIT "" "%ProgramData%\InitialSetup\MBSetup.exe" /verysilent /norestart
-DEL "%ProgramData%\InitialSetup\MBSetup.exe" /F /Q>nul
-BITSADMIN /transfer "VLC" /download /priority FOREGROUND "https://mirror.clarkson.edu/videolan/vlc/3.0.18/win64/vlc-3.0.18-win64.exe" "%ProgramData%\InitialSetup\vlc-3.0.18-win64.exe"
+BITSADMIN /transfer "VLC" /download /priority FOREGROUND "https://mirror.clarkson.edu/videolan/vlc/3.0.20/win64/vlc-3.0.20-win64.exe" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe"
 ECHO. & ECHO Installing VLC...
-START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.18-win64.exe" /S
-DEL "%ProgramData%\InitialSetup\vlc-3.0.18-win64.exe" /F /Q>nul
+START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe" /S
 )
 IF "%RUNMODE%"=="B" (
 ::Business Example Section
 BITSADMIN /transfer "GoToAssist" /download /priority FOREGROUND /dynamic "https://fastsupport.gotoassist.com/download/unattendedDownloadAuto" "%ProgramData%\InitialSetup\g2ax_unattended.exe"
 ECHO. & ECHO Installing GoToAssist...
 START /WAIT "" "%ProgramData%\InitialSetup\g2ax_unattended.exe" /verysilent /norestart
-DEL "%ProgramData%\InitialSetup\g2ax_unattended.exe" /F /Q
 ECHO. & ECHO Complete!
 START "" https://us.cloudcare.avg.com/#/
 )
