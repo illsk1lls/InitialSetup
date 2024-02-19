@@ -1,4 +1,4 @@
-# InitialSetup.cmd and InitialSetupB.cmd, for Win8-11
+# InitialSetup.cmd Win8-11
 
 This is an example CMD script that can be adapted to suit your needs.<br>
 
