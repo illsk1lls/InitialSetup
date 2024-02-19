@@ -1,12 +1,12 @@
 @ECHO OFF
-::Request admin if not
+REM Request admin if not
 >nul 2>&1 reg add hkcu\software\classes\.InitSetup\shell\runas\command /f /ve /d "cmd /x /d /r set \"f0=%%2\"& call \"%%2\" %%3"& set _= %*
 >nul 2>&1 fltmc|| if "%f0%" neq "%~f0" (cd.>"%ProgramData%\runas.InitSetup" & start "%~n0" /high "%ProgramData%\runas.InitSetup" "%~f0" "%_:"=""%" & exit /b)
-::Exit here if admin not approved
+REM Exit here if admin not approved
 >nul 2>&1 reg delete hkcu\software\classes\.InitSetup\ /f &>nul 2>&1 del %ProgramData%\runas.InitSetup /f /q
-::Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
+REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
 SET TZNAME="Eastern Standard Time"
-::InitialSetup can be run two ways. Business and Non-Business. Add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything.)
+REM InitialSetup can be run two ways. Business and Non-Business. Add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything.)
 SET RUNMODE=%~n0
 IF "%RUNMODE:~-1%"=="b" SET "RUNMODE=B"
 IF "%RUNMODE%"=="B" (
@@ -14,7 +14,7 @@ TITLE Initial Setup for Business v1.1
 ) ELSE (
 TITLE Initial Setup v1.1
 )
-::Copy to program data and run from there. This allows you to run from USB and remove it while the script is running.
+REM Copy to program data and run from there. This allows you to run from USB and remove it while the script is running.
 CD /D %~dp0
 IF NOT "%~f0" EQU "%ProgramData%\%~nx0" (
 COPY /Y "%~f0" "%ProgramData%">nul
@@ -27,12 +27,12 @@ FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\
 IF "%ProductName%"=="Windows 7" ECHO. & ECHO Windows 7 detected. & ECHO. & ECHO SYSTEM NOT SUPPORTED! & ECHO. & PAUSE & EXIT
 FOR /F "usebackq tokens=3" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentBuild 2^>nul`) DO SET /A "CurrentBuild=%%i"
 IF %CurrentBuild% GEQ 22000 (
-::Win11 Specific Fixes
+REM Win11 Specific Fixes
 ECHO. & ECHO Windows 11 detected. Fixing File Explorer...
 REG ADD HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32 /t REG_SZ /d "" /f>nul
 REG ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v UseCompactMode /t REG_DWORD /d 1 /f>nul
 )
-::All machines get these settings
+REM All machines get these settings
 ECHO. & ECHO Disabling Device Encryption...
 MANAGE-BDE -OFF C:>nul
 ECHO. & ECHO Cleaning Up Windows Installation Files...
@@ -107,7 +107,7 @@ BITSADMIN /transfer "Adobe Reader DC" /download /priority FOREGROUND "http://ard
 ECHO. & ECHO Installing Adobe Reader DC...
 START /WAIT "" "%ProgramData%\InitialSetup\AcroRdrDC2000920063_en_US.exe" /sAll /rs /msi EULA_ACCEPT=YES
 IF NOT "%RUNMODE%"=="B" (
-::Non-Business Example Section
+REM Non-Business Example Section
 BITSADMIN /transfer "Malwarebytes" /download /priority FOREGROUND "https://www.malwarebytes.com/api/downloads/mb-windows?filename=MBSetup.exe" "%ProgramData%\InitialSetup\MBSetup.exe"
 ECHO. & ECHO Installing Malwarebytes...
 START /WAIT "" "%ProgramData%\InitialSetup\MBSetup.exe" /verysilent /norestart
@@ -116,12 +116,12 @@ ECHO. & ECHO Installing VLC...
 START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe" /S
 )
 IF "%RUNMODE%"=="B" (
-::Business Example Section
+REM Business Example Section
 BITSADMIN /transfer "GoToAssist" /download /priority FOREGROUND /dynamic "https://fastsupport.gotoassist.com/download/unattendedDownloadAuto" "%ProgramData%\InitialSetup\g2ax_unattended.exe"
 ECHO. & ECHO Installing GoToAssist...
 START /WAIT "" "%ProgramData%\InitialSetup\g2ax_unattended.exe" /verysilent /norestart
 ECHO. & ECHO Complete!
 START "" https://us.cloudcare.avg.com/#/
 )
-::Clean up and self delete version running from ProgramData
+REM Clean up and self delete version running from ProgramData
 POPD & RD "%ProgramData%\InitialSetup" /S /Q>nul & (GOTO) 2>nul & del "%~f0">nul & EXIT

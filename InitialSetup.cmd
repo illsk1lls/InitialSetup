@@ -1,35 +1,37 @@
 @ECHO OFF
-::Request admin if not
+REM Request admin if not
 >nul 2>&1 reg add hkcu\software\classes\.InitSetup\shell\runas\command /f /ve /d "cmd /x /d /r set \"f0=%%2\"& call \"%%2\" %%3"
 >nul 2>&1 fltmc|| if "%f0%" neq "%~f0" (cd.>"%ProgramData%\runas.InitSetup" & start "%~n0" /high "%ProgramData%\runas.InitSetup" "%~f0"&exit /b)
 >nul 2>&1 reg delete hkcu\software\classes\.InitSetup\ /f &>nul 2>&1 del %ProgramData%\runas.InitSetup /f /q
-::Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
-SET TZNAME="Eastern Standard Time"
-::InitialSetup can be run two ways. Business and Non-Business. Add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything.)
-SET RUNMODE=%~n0
-IF /I "%RUNMODE:~-1%"=="b" SET "RUNMODE=B"
-IF "%RUNMODE%"=="B" (
-TITLE Initial Setup for Business v1.1
-) ELSE (
-TITLE Initial Setup v1.1
-)
 CD /D %~dp0
 IF NOT "%~f0" EQU "%ProgramData%\%~nx0" (
 COPY /Y "%~f0" "%ProgramData%">nul
 START "" "%ProgramData%\%~nx0"
-EXIT /b
+EXIT
 )
-::Center Window
+REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
+SET TZNAME="Eastern Standard Time"
+REM InitialSetup can be run two ways. Use the GUI to select Normal or Business modes (For example purposes, use this template to suit your needs)
+POWERSHELL -Window Minimized -c ""
+FOR /F "usebackq tokens=*" %%# IN (`POWERSHELL -nop -c "Add-Type -AssemblyName System.Windows.Forms;$^ = New-Object system.Windows.Forms.Form;$^.ClientSize='170,90';$^.BackColor='#AAAAAA';$^.FormBorderStyle='none';$L=New-Object system.Windows.Forms.ComboBox;$L.width=114;$L.autosize=$true;@('Normal Mode','Business Mode')|ForEach-Object{[void] $L.Items.Add($_)};$L.SelectedIndex=0;$L.DropDownStyle='DropDownList';$L.location=New-Object System.Drawing.Point(28,19);$G=New-Object System.Windows.Forms.Button;$G.Location=New-Object System.Drawing.Size(28,55);$G.Size=New-Object System.Drawing.Size(40,22);$G.Text='Go';$G.Add_Click({$^.Close();write-host ($L.SelectedIndex)});$Q=New-Object System.Windows.Forms.Button;$Q.Location=New-Object System.Drawing.Size(103,55);$Q.Size=New-Object System.Drawing.Size(40,22);$Q.Text='Exit';$Q.Add_Click({$^.Close();Write-Host 2});$^.Controls.Add($G);$^.Controls.Add($Q);$^.Controls.Add($L);$^.StartPosition=[System.Windows.Forms.FormStartPosition]::CenterScreen;[void]$^.ShowDialog()"`) DO SET /A RUNMODE=%%#
+IF "%RUNMODE%"=="2" RD "%ProgramData%\InitialSetup" /S /Q>nul & (GOTO) 2>nul & del "%~f0">nul & EXIT
+POWERSHELL -Window Normal -c ""
+IF "%RUNMODE%"=="1" (
+TITLE Initial Setup for Business v1.1
+) ELSE (
+TITLE Initial Setup v1.1
+)
+REM Center Window
 >nul 2>&1 POWERSHELL -nop -ep Bypass -c "$w=Add-Type -Name WAPI -PassThru -MemberDefinition '[DllImport(\"user32.dll\")]public static extern void SetProcessDPIAware();[DllImport(\"shcore.dll\")]public static extern void SetProcessDpiAwareness(int value);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetConsoleWindow();[DllImport(\"user32.dll\")]public static extern void GetWindowRect(IntPtr hwnd, int[] rect);[DllImport(\"user32.dll\")]public static extern void GetClientRect(IntPtr hwnd, int[] rect);[DllImport(\"user32.dll\")]public static extern void GetMonitorInfoW(IntPtr hMonitor, int[] lpmi);[DllImport(\"user32.dll\")]public static extern IntPtr MonitorFromWindow(IntPtr hwnd, int dwFlags);[DllImport(\"user32.dll\")]public static extern int SetWindowPos(IntPtr hwnd, IntPtr hwndAfterZ, int x, int y, int w, int h, int flags);';$PROCESS_PER_MONITOR_DPI_AWARE=2;try {$w::SetProcessDpiAwareness($PROCESS_PER_MONITOR_DPI_AWARE)} catch {$w::SetProcessDPIAware()}$hwnd=$w::GetConsoleWindow();$moninf=[int[]]::new(10);$moninf[0]=40;$MONITOR_DEFAULTTONEAREST=2;$w::GetMonitorInfoW($w::MonitorFromWindow($hwnd, $MONITOR_DEFAULTTONEAREST), $moninf);$monwidth=$moninf[7] - $moninf[5];$monheight=$moninf[8] - $moninf[6];$wrect=[int[]]::new(4);$w::GetWindowRect($hwnd, $wrect);$winwidth=$wrect[2] - $wrect[0];$winheight=$wrect[3] - $wrect[1];$x=[int][math]::Round($moninf[5] + $monwidth / 2 - $winwidth / 2);$y=[int][math]::Round($moninf[6] + $monheight / 2 - $winheight / 2);$SWP_NOSIZE=0x0001;$SWP_NOZORDER=0x0004;exit [int]($w::SetWindowPos($hwnd, [IntPtr]::Zero, $x, $y, 0, 0, $SWP_NOSIZE -bOr $SWP_NOZORDER) -eq 0)"
 IF EXIST "%ProgramData%\InitialSetup" RD "%ProgramData%\InitialSetup" /S /Q>nul
 MD "%ProgramData%\InitialSetup\Junkbin">nul
 ECHO Checking System...
 FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul`) DO set "ProductName=%%i %%j"
 IF "%ProductName%"=="Windows 7" ECHO. & ECHO Windows 7 detected. & ECHO. & ECHO SYSTEM NOT SUPPORTED! & ECHO. & PAUSE & EXIT
-::Win 11 Specific Fixes
+REM Win 11 Specific Fixes
 POWERSHELL -nop -c "Get-WmiObject -Class Win32_OperatingSystem | Format-List -Property Caption" | find "Windows 11" > nul
 IF %errorlevel% == 0 ECHO. & ECHO Windows 11 detected. Fixing File Explorer... & reg.exe ADD HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32 /t REG_SZ /d "" /f>nul & reg.exe ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v UseCompactMode /t REG_DWORD /d 1 /f>nul
-::All machines get these settings
+REM All machines get these settings
 ECHO. & ECHO Disabling Device Encryption...
 MANAGE-BDE -OFF C:>nul
 ECHO. & ECHO Cleaning Up Windows Installation Files...
@@ -38,9 +40,9 @@ ECHO. & ECHO Enabling F8 Boot Menu...
 BCDEDIT /SET {DEFAULT} BOOTMENUPOLICY LEGACY>nul
 ECHO. & ECHO Enabling System Restore and Creating a Restore Point...
 POWERSHELL -nop -c "Enable-ComputerRestore -Drive 'C:\'">nul
-::SMBv1 Option Disabled by default, un-comment next 2 lines to enable
-::ECHO. & ECHO Enabling SMBv1...
-::POWERSHELL -nop -ep bypass -c "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Client -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Server -NoRestart"; "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Deprecation -NoRestart">nul
+REM SMBv1 Option Disabled by default, un-comment next 2 lines to enable
+REM ECHO. & ECHO Enabling SMBv1...
+REM POWERSHELL -nop -ep bypass -c "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Client -NoRestart"; "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Server -NoRestart"; "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol-Deprecation -NoRestart">nul
 ECHO. & ECHO Setting Power Options...
 powercfg /change monitor-timeout-ac 0
 powercfg /change monitor-timeout-dc 0
@@ -119,7 +121,7 @@ ECHO. & ECHO Running ADWCleaner...
 START /WAIT "" "%ProgramData%\InitialSetup\adwcleaner.exe" /eula /clean /noreboot /preinstalled
 ECHO. & ECHO Complete!
 IF NOT "%RUNMODE%"=="B" (
-::Non-Business Example Section
+REM Non-Business Example Section
 ECHO. & ECHO Starting Malwarebytes Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.malwarebytes.com/api/downloads/mb-windows?filename=MBSetup.exe
 ECHO. & ECHO Installing Malwarebytes...
@@ -131,8 +133,8 @@ ECHO. & ECHO Installing VLC...
 START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe" /S
 ECHO. & ECHO Complete!
 )
-IF "%RUNMODE%"=="B" (
-::Business Example Section
+IF "%RUNMODE%"=="1" (
+REM Business Example Section
 ECHO. & ECHO Starting GoToAssist Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://fastsupport.gotoassist.com/download/unattendedDownloadAuto -o g2ax_unattended.exe
 ECHO. & ECHO Installing GoToAssist Unattended...
