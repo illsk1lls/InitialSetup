@@ -6,7 +6,7 @@ TITLE Initial Setup - Select Mode
 REM Copy to %ProgramData% - Use registry key to generate a request to run as admin
 >nul 2>&1 REG ADD HKCU\Software\classes\.InitialSetup\shell\runas\command /f /ve /d "CMD /x /d /r SET \"f0=1\"&CALL \"%%2\" %%3"
 IF /I NOT "%~dp0" == "%ProgramData%\" ECHO|(SET /p="%~dp0")>"%ProgramData%\launcher.InitialSetup"&>nul 2>&1 COPY /Y "%~f0" "%ProgramData%"
->nul 2>&1 FLTMC && IF NOT "%f0%"=="1" (TITLE Re-Launching...&START "" "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"&EXIT /b) || IF NOT "%f0%"=="1" (TITLE Re-Launching...&START "" /high "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"&EXIT /b)
+>nul 2>&1 FLTMC && (IF NOT "%f0%"=="1" (TITLE Re-Launching...&START "" "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"&EXIT /b)) || IF NOT "%f0%"=="1" (TITLE Re-Launching...&START "" /high "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"&EXIT /b)
 REM Script stops on the previous line if the admin request is declined
 >nul 2>&1 REG DELETE HKCU\Software\classes\.InitialSetup\ /F &>nul 2>&1 DEL "%ProgramData%\launcher.InitialSetup" /F /Q
 REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
