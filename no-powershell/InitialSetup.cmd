@@ -6,7 +6,7 @@ REM Exit here if admin not approved
 >nul 2>&1 reg delete hkcu\software\classes\.InitSetup\ /f &>nul 2>&1 del %ProgramData%\runas.InitSetup /f /q
 REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
 SET TZNAME="Eastern Standard Time"
-REM InitialSetup can be run two ways. Business and Non-Business. Add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything. The other version uses a GUI for this)
+REM InitialSetup can be run two ways. Business and Non-Business. In this non-powershell edition, add the letter B to the end of the filename for the business version, remove the B switch back. For example purposes only. Adapt to your needs. (Only The last letter of the name matters, the CMD script can be named anything. The other version uses a GUI for this)
 SET RUNMODE=%~n0
 IF "%RUNMODE:~-1%"=="b" SET "RUNMODE=B"
 IF "%RUNMODE%"=="B" (
