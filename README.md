@@ -18,8 +18,8 @@ Sets power options to highest performance (usb selective suspend off/pci link st
 Disables UAC<br>
 Show Hidden Files in File Explorer<br>
 Show File Extensions in File Explorer<br>
-Set's TimeZone (User Enters at top of script, currently set to "Eastern Standard Time")<br>
-Set's Correct Date and Time<br>
+Sets TimeZone (User Enters at top of script, currently set to "Eastern Standard Time")<br>
+Sets Correct Date and Time<br>
 Enables Network Discovery<br>
 Enables File and Printer Sharing<br>
 Initiates Windows Update in the background<br>
