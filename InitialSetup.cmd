@@ -1,46 +1,91 @@
 @ECHO OFF
-REM Allow only one instance at a time
-TASKLIST /V /NH /FI "imagename eq cmd.exe"|FINDSTR /I /C:"Initial Setup">nul
-IF NOT %errorlevel%==1 POWERSHELL -nop -c "$^={$Notify=[PowerShell]::Create().AddScript({$Audio=New-Object System.Media.SoundPlayer;$Audio.SoundLocation=$env:WinDir + '\Media\Windows Notify System Generic.wav';$Audio.playsync()});$rs=[RunspaceFactory]::CreateRunspace();$rs.ApartmentState="^""STA"^"";$rs.ThreadOptions="^""ReuseThread"^"";$rs.Open();$Notify.Runspace=$rs;$Notify.BeginInvoke()};&$^;$PopUp=New-Object -ComObject Wscript.Shell;$PopUp.Popup("^""Initial Setup is already running!"^"",0,'ERROR:',0x10)">nul&EXIT
-TITLE Initial Setup - Mode Selection
-REM Copy to %ProgramData% - Use registry key to generate a request to run as admin
->nul 2>&1 REG ADD HKCU\Software\classes\.InitialSetup\shell\runas\command /f /ve /d "CMD /x /d /r SET \"f0=1\"&CALL \"%%2\" %%3"
-IF /I NOT "%~dp0" == "%ProgramData%\" ECHO|(SET /p="%~dp0")>"%ProgramData%\launcher.InitialSetup"&>nul 2>&1 COPY /Y "%~f0" "%ProgramData%"
->nul 2>&1 FLTMC && (IF NOT "%f0%"=="1" (TITLE Re-Launching...&START "" "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"&EXIT /b)) || IF NOT "%f0%"=="1" (TITLE Re-Launching...&START "" /high "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"&EXIT /b)
-REM Script stops on the previous line if the admin request is declined
->nul 2>&1 REG DELETE HKCU\Software\classes\.InitialSetup\ /F &>nul 2>&1 DEL "%ProgramData%\launcher.InitialSetup" /F /Q
 REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
 SET TZNAME="Eastern Standard Time"
-REM Center Window
->nul 2>&1 POWERSHELL -nop -ep Bypass -c "$w=Add-Type -Name WAPI -PassThru -MemberDefinition '[DllImport(\"user32.dll\")]public static extern void SetProcessDPIAware();[DllImport(\"shcore.dll\")]public static extern void SetProcessDpiAwareness(int value);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetConsoleWindow();[DllImport(\"user32.dll\")]public static extern void GetWindowRect(IntPtr hwnd, int[] rect);[DllImport(\"user32.dll\")]public static extern void GetClientRect(IntPtr hwnd, int[] rect);[DllImport(\"user32.dll\")]public static extern void GetMonitorInfoW(IntPtr hMonitor, int[] lpmi);[DllImport(\"user32.dll\")]public static extern IntPtr MonitorFromWindow(IntPtr hwnd, int dwFlags);[DllImport(\"user32.dll\")]public static extern int SetWindowPos(IntPtr hwnd, IntPtr hwndAfterZ, int x, int y, int w, int h, int flags);';$PROCESS_PER_MONITOR_DPI_AWARE=2;try {$w::SetProcessDpiAwareness($PROCESS_PER_MONITOR_DPI_AWARE)} catch {$w::SetProcessDPIAware()}$hwnd=$w::GetConsoleWindow();$moninf=[int[]]::new(10);$moninf[0]=40;$MONITOR_DEFAULTTONEAREST=2;$w::GetMonitorInfoW($w::MonitorFromWindow($hwnd, $MONITOR_DEFAULTTONEAREST), $moninf);$monwidth=$moninf[7] - $moninf[5];$monheight=$moninf[8] - $moninf[6];$wrect=[int[]]::new(4);$w::GetWindowRect($hwnd, $wrect);$winwidth=$wrect[2] - $wrect[0];$winheight=$wrect[3] - $wrect[1];$x=[int][math]::Round($moninf[5] + $monwidth / 2 - $winwidth / 2);$y=[int][math]::Round($moninf[6] + $monheight / 2 - $winheight / 2);$SWP_NOSIZE=0x0001;$SWP_NOZORDER=0x0004;exit [int]($w::SetWindowPos($hwnd, [IntPtr]::Zero, $x, $y, 0, 0, $SWP_NOSIZE -bOr $SWP_NOZORDER) -eq 0)"
+REM Allow only one instance at a time
+TASKLIST /V /NH /FI "imagename eq cmd.exe"|FINDSTR /I /C:"Initial Setup">nul
+IF NOT %errorlevel%==1 (
+	POWERSHELL -nop -c "$^={$Notify=[PowerShell]::Create().AddScript({$Audio=New-Object System.Media.SoundPlayer;$Audio.SoundLocation=$env:WinDir + '\Media\Windows Notify System Generic.wav';$Audio.playsync()});$rs=[RunspaceFactory]::CreateRunspace();$rs.ApartmentState="^""STA"^"";$rs.ThreadOptions="^""ReuseThread"^"";$rs.Open();$Notify.Runspace=$rs;$Notify.BeginInvoke()};&$^;$PopUp=New-Object -ComObject Wscript.Shell;$PopUp.Popup("^""Initial Setup is already running!"^"",0,'ERROR:',0x10)">nul&EXIT
+)
+TITLE Initial Setup - Mode Selection
+REM Copy self to %ProgramData% and request RunAsAdmin
+IF /I NOT "%~dp0" == "%ProgramData%\" (
+	>nul 2>&1 REG ADD HKCU\Software\classes\.InitialSetup\shell\runas\command /f /ve /d "CMD /x /d /r SET \"f0=1\"&CALL \"%%2\" %%3"
+	CD.>"%ProgramData%\launcher.InitialSetup"
+	>nul 2>&1 COPY /Y "%~f0" "%ProgramData%"
+	>nul 2>&1 FLTMC && (
+		TITLE Re-Launching...
+		CALL :SETTERMINAL
+		START "" "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"
+		CALL :RESTORETERMINAL
+		>nul 2>&1 REG DELETE HKCU\Software\classes\.InitialSetup\ /F
+		>nul 2>&1 DEL "%ProgramData%\launcher.InitialSetup" /F /Q
+		EXIT /b
+	) || IF NOT "%f0%"=="1" (
+		TITLE Re-Launching...
+		CALL :SETTERMINAL
+		START "" /high "%ProgramData%\launcher.InitialSetup" "%ProgramData%\%~nx0"
+		CALL :RESTORETERMINAL
+		>nul 2>&1 REG DELETE HKCU\Software\classes\.InitialSetup\ /F
+		>nul 2>&1 DEL "%ProgramData%\launcher.InitialSetup" /F /Q
+		EXIT /b
+	)
+)
+REM Script stops here if admin request is declined
+CALL :CENTERWINDOW
 REM InitialSetup can be run two ways. Use the GUI to select Normal or Business modes (For example purposes only, use this template to suit your needs)
 ECHO USE THE GUI TO BEGIN
-FOR /F "usebackq tokens=*" %%# IN (`POWERSHELL -nop -c "Add-Type -AssemblyName System.Windows.Forms;$^ = New-Object system.Windows.Forms.Form;$^.ClientSize='170,90';$^.BackColor='#AAAAAA';$^.FormBorderStyle='none';$^.TopMost='true';$L=New-Object system.Windows.Forms.ComboBox;$L.width=114;$L.autosize=$true;@('Normal Mode','Business Mode')|ForEach-Object{[void] $L.Items.Add($_)};$L.SelectedIndex=0;$L.DropDownStyle='DropDownList';$L.location=New-Object System.Drawing.Point(28,19);$G=New-Object System.Windows.Forms.Button;$G.Location=New-Object System.Drawing.Size(28,55);$G.Size=New-Object System.Drawing.Size(40,22);$G.Text='Go';$G.Add_Click({$^.Close();write-host ($L.SelectedIndex)});$Q=New-Object System.Windows.Forms.Button;$Q.Location=New-Object System.Drawing.Size(103,55);$Q.Size=New-Object System.Drawing.Size(40,22);$Q.Text='Exit';$Q.Add_Click({$^.Close();Write-Host 2});$^.Controls.Add($G);$^.Controls.Add($Q);$^.Controls.Add($L);$^.StartPosition=[System.Windows.Forms.FormStartPosition]::CenterScreen;[void]$^.ShowDialog()"`) DO SET /A RUNMODE=%%#
-CLS
-IF "%RUNMODE%"=="2" RD "%ProgramData%\InitialSetup" /S /Q>nul & (GOTO) 2>nul & del "%~f0">nul & EXIT
-IF "%RUNMODE%"=="1" (
-TITLE Initial Setup for Business v1.1
-) ELSE (
-TITLE Initial Setup v1.1
+FOR /F "usebackq tokens=*" %%# IN (`POWERSHELL -nop -c "Add-Type -AssemblyName System.Windows.Forms;$^ = New-Object system.Windows.Forms.Form;$^.ClientSize='170,90';$^.BackColor='#AAAAAA';$^.FormBorderStyle='none';$^.TopMost='true';$L=New-Object system.Windows.Forms.ComboBox;$L.width=114;$L.autosize=$true;@('Normal Mode','Business Mode')|ForEach-Object{[void] $L.Items.Add($_)};$L.SelectedIndex=0;$L.DropDownStyle='DropDownList';$L.location=New-Object System.Drawing.Point(28,19);$G=New-Object System.Windows.Forms.Button;$G.Location=New-Object System.Drawing.Size(28,55);$G.Size=New-Object System.Drawing.Size(40,22);$G.Text='Go';$G.Add_Click({$^.Close();write-host ($L.SelectedIndex)});$Q=New-Object System.Windows.Forms.Button;$Q.Location=New-Object System.Drawing.Size(103,55);$Q.Size=New-Object System.Drawing.Size(40,22);$Q.Text='Exit';$Q.Add_Click({$^.Close();Write-Host 2});$^.Controls.Add($G);$^.Controls.Add($Q);$^.Controls.Add($L);$^.StartPosition=[System.Windows.Forms.FormStartPosition]::CenterScreen;[void]$^.ShowDialog()"`) DO (
+	SET /A RUNMODE=%%#
+	CLS
 )
-IF EXIST "%ProgramData%\InitialSetup" RD "%ProgramData%\InitialSetup" /S /Q>nul
+IF "%RUNMODE%"=="2" (
+	CALL :CLEANUPANDEXIT
+)
+IF "%RUNMODE%"=="1" (
+	TITLE Initial Setup for Business v1.1
+) ELSE (
+	TITLE Initial Setup v1.1
+)
+IF EXIST "%ProgramData%\InitialSetup" (
+	RD "%ProgramData%\InitialSetup" /S /Q>nul
+)
 MD "%ProgramData%\InitialSetup\Junkbin">nul
 ECHO Checking System...
-FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul`) DO set "ProductName=%%i %%j"
-IF "%ProductName%"=="Windows 7" ECHO/ & ECHO Windows 7 detected. & ECHO/ & ECHO SYSTEM NOT SUPPORTED! & ECHO/ & PAUSE & EXIT
+FOR /F "usebackq skip=2 tokens=3-4" %%i IN (`REG QUERY "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul`) DO (
+	SET "ProductName=%%i %%j"
+)
+IF /I "%ProductName%"=="Windows 7" (
+	ECHO/
+	ECHO Windows 7 detected.
+	ECHO/
+	ECHO SYSTEM NOT SUPPORTED!
+	ECHO/
+	PAUSE
+	EXIT
+)
 REM Win 11 Specific Fixes
 POWERSHELL -nop -c "Get-WmiObject -Class Win32_OperatingSystem | Format-List -Property Caption" | find "Windows 11" > nul
-IF %errorlevel% == 0 ECHO/ & ECHO Windows 11 detected. Fixing File Explorer... & reg.exe ADD HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32 /t REG_SZ /d "" /f>nul & reg.exe ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v UseCompactMode /t REG_DWORD /d 1 /f>nul
+IF %errorlevel% == 0 (
+	ECHO/
+	ECHO Windows 11 detected. Fixing File Explorer...
+	REG.EXE ADD HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32 /t REG_SZ /d "" /f>nul
+	REG.EXE ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v UseCompactMode /t REG_DWORD /d 1 /f>nul
+)
 REM All machines get these settings
-ECHO/ & ECHO Disabling Device Encryption...
+ECHO/
+ECHO Disabling Device Encryption...
 MANAGE-BDE -OFF C:>nul
-ECHO/ & ECHO Cleaning Up Windows Installation Files...
+ECHO/
+ECHO Cleaning Up Windows Installation Files...
 CLEANMGR /d c: /Autoclean
-ECHO/ & ECHO Enabling F8 Boot Menu...
+ECHO/
+ECHO Enabling F8 Boot Menu...
 BCDEDIT /SET {DEFAULT} BOOTMENUPOLICY LEGACY>nul
-ECHO/ & ECHO Enabling System Restore and Creating a Restore Point...
+ECHO/
+ECHO Enabling System Restore and Creating a Restore Point...
 POWERSHELL -nop -c "Enable-ComputerRestore -Drive 'C:\'">nul
-ECHO/ & ECHO Setting Power Options...
+ECHO/
+ECHO Setting Power Options...
 powercfg /change monitor-timeout-ac 0
 powercfg /change monitor-timeout-dc 0
 powercfg /change standby-timeout-ac 0
@@ -63,80 +108,171 @@ powercfg /setDCvalueindex scheme_current 19cbb8fa-5279-450e-9fac-8a3d5fedd0c1 12
 powercfg /setACvalueindex scheme_current 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0
 powercfg /setDCvalueindex scheme_current 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0
 powercfg /setActive scheme_current
-ECHO/ & ECHO Disabling UAC...
-reg.exe ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f>nul
-ECHO/ & ECHO Disabling Edge Bar...
-reg.exe ADD HKLM\SOFTWARE\Policies\Microsoft\Edge /v WebWidgetAllowed /t REG_DWORD /d 0 /f>nul
-ECHO/ & ECHO Enabling Automatic Registry Backups...
-reg.exe ADD "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Configuration Manager" /v EnablePeriodicBackup /t REG_DWORD /d 1 /f>nul
-ECHO/ & ECHO Showing Hidden Files...
-reg.exe ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v Hidden /t REG_DWORD /d 1 /f>nul
-ECHO/ & ECHO Making File Extenstions Visible...
-reg.exe ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v HideFileExt /t REG_DWORD /d 0 /f>nul
-ECHO/ & ECHO Setting Time Zone...
-tzutil /s %TZNAME%
+ECHO/
+ECHO Disabling UAC...
+REG.EXE ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f>nul
+ECHO/
+ECHO Disabling Edge Bar...
+REG.EXE ADD HKLM\SOFTWARE\Policies\Microsoft\Edge /v WebWidgetAllowed /t REG_DWORD /d 0 /f>nul
+ECHO/
+ECHO Enabling Automatic Registry Backups...
+REG.EXE ADD "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Configuration Manager" /v EnablePeriodicBackup /t REG_DWORD /d 1 /f>nul
+ECHO/
+ECHO Showing Hidden Files...
+REG.EXE ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v Hidden /t REG_DWORD /d 1 /f>nul
+ECHO/
+ECHO Making File Extenstions Visible...
+REG.EXE ADD HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced /v HideFileExt /t REG_DWORD /d 0 /f>nul
+ECHO/
+ECHO Setting Time Zone...
+TZUTIL /s %TZNAME%
 PING -n 1 "google.com" | findstr /r /c:"[0-9] *ms">nul
-IF NOT %errorlevel% == 0 ECHO/ & ECHO Internet connection not detected! & ECHO/ & RD "%ProgramData%\InitialSetup" /S /Q>nul & PAUSE & (GOTO) 2>nul & del "%~f0">nul & EXIT
+IF NOT %errorlevel% == 0 (
+	ECHO/
+	ECHO Internet connection not detected!
+	ECHO/
+	PAUSE
+	CALL :CLEANUPANDEXIT
+)
 ECHO/ & ECHO Updating Time and Date...
-w32tm /config /manualpeerlist:time.windows.com>nul
+W32TM /config /manualpeerlist:time.windows.com>nul
 >nul 2>&1 NET STOP w32time
-reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Services\W32Time\Parameters /v Type /t REG_SZ /d NTP /f>nul
-sc config w32time start= demand>nul
+REG.EXE ADD HKLM\SYSTEM\CurrentControlSet\Services\W32Time\Parameters /v Type /t REG_SZ /d NTP /f>nul
+SC config w32time start= demand>nul
 >nul 2>&1 NET START w32time
-w32tm /resync>nul
-ECHO/ & ECHO Enabling Network Discovery...
-netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes>nul
-ECHO/ & ECHO Enabling File and Printer Sharing...
-netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes>nul
-ECHO/ & ECHO Running Windows Update...
-wuauclt /resetauthorization /detectnow /updatenow
-ECHO/ & ECHO Preparing for Software Downloads...
-PUSHD "%ProgramData%\InitialSetup" & PUSHD "%ProgramData%\InitialSetup\Junkbin"
+W32TM /resync>nul
+ECHO/
+ECHO Enabling Network Discovery...
+NETSH advfirewall firewall set rule group="Network Discovery" new enable=Yes>nul
+ECHO/
+ECHO Enabling File and Printer Sharing...
+NETSH advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes>nul
+ECHO/
+ECHO Running Windows Update...
+WUAUCLT /resetauthorization /detectnow /updatenow
+ECHO/
+ECHO Preparing for Software Downloads...
+PUSHD "%ProgramData%\InitialSetup"
+PUSHD "%ProgramData%\InitialSetup\Junkbin"
 POWERSHELL -nop -c "Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -o '7zr.exe'"; "Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2300-extra.7z -o '7zExtra.7z'"; "Invoke-WebRequest -Uri https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip -o 'Aria2c.zip'"
-7zr.exe e -y 7zExtra.7z>nul & 7za.exe e Aria2c.zip Aria2c.exe -r>nul
-MOVE 7za.* ..>nul & MOVE Aria2c.exe ..>nul & POPD
-ECHO/ & ECHO Starting 7-Zip Download...
+7zr.exe e -y 7zExtra.7z>nul
+7za.exe e Aria2c.zip Aria2c.exe -r>nul
+MOVE 7za.* ..>nul
+MOVE Aria2c.exe ..>nul
+POPD
+ECHO/
+ECHO Starting 7-Zip Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.7-zip.org/a/7z2300-x64.exe
-ECHO/ & ECHO Installing 7-Zip...
+ECHO/
+ECHO Installing 7-Zip...
 START /WAIT "" "%ProgramData%\InitialSetup\7z2300-x64.exe" /S
-ECHO/ & ECHO Complete!
-ECHO/ & ECHO Starting Chrome Download...
+ECHO/
+ECHO Complete!
+ECHO/
+ECHO Starting Chrome Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://dl.google.com/tag/s/appguid%%3D%%7B8A69D345-D564-463C-AFF1-A69D9E530F96%%7D%%26iid%%3D%%7B01BE02E1-8E3F-B3BD-885C-6A7E4415E17F%%7D%%26lang%%3Den%%26browser%%3D5%%26usagestats%%3D0%%26appname%%3DGoogle%%2520Chrome%%26needsadmin%%3Dtrue%%26ap%%3Dx64-stable-statsdef_0%%26brand%%3DGCEB/dl/chrome/install/GoogleChromeEnterpriseBundle64.zip
 "%ProgramData%\InitialSetup\7za.exe" e "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" GoogleChromeStandaloneEnterprise64.msi -r>nul
 DEL "%ProgramData%\InitialSetup\GoogleChromeEnterpriseBundle64.zip" /F /Q>nul
-ECHO/ & ECHO Installing Chrome...
+ECHO/
+ECHO Installing Chrome...
 START /WAIT "" "%ProgramData%\InitialSetup\GoogleChromeStandaloneEnterprise64.msi" /qn /norestart
-ECHO/ & ECHO Complete!
-ECHO/ & ECHO Starting Adobe Reader Download...
+ECHO/
+ECHO Complete!
+ECHO/
+ECHO Starting Adobe Reader Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 http://ardownload.adobe.com/pub/adobe/reader/win/AcrobatDC/2000920063/AcroRdrDC2000920063_en_US.exe
-ECHO/ & ECHO Installing Adobe Reader...
+ECHO/
+ECHO Installing Adobe Reader...
 START /WAIT "" "%ProgramData%\InitialSetup\AcroRdrDC2000920063_en_US.exe" /sAll /rs /msi EULA_ACCEPT=YES
-ECHO/ & ECHO Complete!
-ECHO/ & ECHO Starting ADWCleaner Download...
+ECHO/
+ECHO Complete!
+ECHO/
+ECHO Starting ADWCleaner Download...
 "%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://adwcleaner.malwarebytes.com/adwcleaner?channel=release -o adwcleaner.exe
-ECHO/ & ECHO Running ADWCleaner...
+ECHO/
+ECHO Running ADWCleaner...
 START /WAIT "" "%ProgramData%\InitialSetup\adwcleaner.exe" /eula /clean /noreboot /preinstalled
-ECHO/ & ECHO Complete!
-IF NOT "%RUNMODE%"=="1" (
-REM Non-Business Example Section
-ECHO/ & ECHO Starting Malwarebytes Download...
-"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.malwarebytes.com/api/downloads/mb-windows?filename=MBSetup.exe
-ECHO/ & ECHO Installing Malwarebytes...
-START /WAIT "" "%ProgramData%\InitialSetup\MBSetup.exe" /verysilent /norestart
-ECHO/ & ECHO Complete!
-ECHO/ & ECHO Starting VLC Download...
-"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://mirror.clarkson.edu/videolan/vlc/3.0.20/win64/vlc-3.0.20-win64.exe
-ECHO/ & ECHO Installing VLC...
-START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe" /S
-ECHO/ & ECHO Complete!
-)
+ECHO/
+ECHO Complete!
 IF "%RUNMODE%"=="1" (
-REM Business Example Section
-ECHO/ & ECHO Starting GoToAssist Download...
-"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://fastsupport.gotoassist.com/download/unattendedDownloadAuto -o g2ax_unattended.exe
-ECHO/ & ECHO Installing GoToAssist Unattended...
-START /WAIT "" "%ProgramData%\InitialSetup\g2ax_unattended.exe"
-ECHO/ & ECHO Complete!
-START "" https://us.cloudcare.avg.com/#/
+	REM Business Example Section
+	ECHO/
+	ECHO Starting GoToAssist Download...
+	"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://fastsupport.gotoassist.com/download/unattendedDownloadAuto -o g2ax_unattended.exe
+	ECHO/
+	ECHO Installing GoToAssist Unattended...
+	START /WAIT "" "%ProgramData%\InitialSetup\g2ax_unattended.exe"
+	ECHO/
+	ECHO Complete!
+	START "" https://us.cloudcare.avg.com/#/
+) ELSE (
+	REM Non-Business Example Section
+	ECHO/
+	ECHO Starting Malwarebytes Download...
+	"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.malwarebytes.com/api/downloads/mb-windows?filename=MBSetup.exe
+	ECHO/
+	ECHO Installing Malwarebytes...
+	START /WAIT "" "%ProgramData%\InitialSetup\MBSetup.exe" /verysilent /norestart
+	ECHO/
+	ECHO Complete!
+	ECHO/
+	ECHO Starting VLC Download...
+	"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://mirror.clarkson.edu/videolan/vlc/3.0.20/win64/vlc-3.0.20-win64.exe
+	ECHO/
+	ECHO Installing VLC...
+	START /WAIT "" "%ProgramData%\InitialSetup\vlc-3.0.20-win64.exe" /S
+	ECHO/
+	ECHO Complete!
 )
-POPD & RD "%ProgramData%\InitialSetup" /S /Q>nul & (GOTO) 2>nul & del "%~f0">nul & EXIT
+POPD 
+CALL :CLEANUPANDEXIT
+
+:SETTERMINAL
+SET "LEGACY={B23D10C0-E52E-411E-9D5B-C09FDF709C7D}"
+SET "TERMINAL={2EACA947-7F5F-4CFA-BA87-8F7FBEEFBE69}"
+SET "TERMINAL2={E12CFF52-A866-4C77-9A90-F570A7AA2C6B}"
+POWERSHELL -nop -c "Get-WmiObject -Class Win32_OperatingSystem | Select -ExpandProperty Caption | Find 'Windows 11'">nul && (
+	SET isEleven=1
+	FOR /F "usebackq tokens=3" %%# IN (`REG QUERY "HKCU\Console\%%%%Startup" /v DelegationConsole 2^>nul`) DO (
+		IF NOT "%%#"=="%LEGACY%" (
+			SET "DEFAULTCONSOLE=%%#"
+			REG ADD "HKCU\Console\%%%%Startup" /v DelegationConsole /t REG_SZ /d "%LEGACY%" /f>nul
+			REG ADD "HKCU\Console\%%%%Startup" /v DelegationTerminal /t REG_SZ /d "%LEGACY%" /f>nul
+		)
+	)
+)
+FOR /F "usebackq tokens=3" %%# IN (`REG QUERY "HKCU\Console" /v ForceV2 2^>nul`) DO (
+	IF NOT "%%#"=="0x1" (
+		SET LEGACYTERM=0
+		REG ADD "HKCU\Console" /v ForceV2 /t REG_DWORD /d 1 /f>nul
+	) ELSE (
+		SET LEGACYTERM=1
+	)
+)
+EXIT /b
+
+:RESTORETERMINAL
+IF "%isEleven%"=="1" (
+	IF DEFINED DEFAULTCONSOLE (
+		IF "%DEFAULTCONSOLE%"=="%TERMINAL%" (
+			REG ADD "HKCU\Console\%%%%Startup" /v DelegationConsole /t REG_SZ /d "%TERMINAL%" /f>nul
+			REG ADD "HKCU\Console\%%%%Startup" /v DelegationTerminal /t REG_SZ /d "%TERMINAL2%" /f>nul
+		) ELSE (
+			REG ADD "HKCU\Console\%%%%Startup" /v DelegationConsole /t REG_SZ /d "%DEFAULTCONSOLE%" /f>nul
+			REG ADD "HKCU\Console\%%%%Startup" /v DelegationTerminal /t REG_SZ /d "%DEFAULTCONSOLE%" /f>nul
+		)
+	)
+)
+IF "%LEGACYTERM%"=="0" (
+	REG ADD "HKCU\Console" /v ForceV2 /t REG_DWORD /d 0 /f>nul
+)
+EXIT /b
+
+:CENTERWINDOW
+>nul 2>&1 POWERSHELL -nop -ep Bypass -c "$w=Add-Type -Name WAPI -PassThru -MemberDefinition '[DllImport(\"user32.dll\")]public static extern void SetProcessDPIAware();[DllImport(\"shcore.dll\")]public static extern void SetProcessDpiAwareness(int value);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetConsoleWindow();[DllImport(\"user32.dll\")]public static extern void GetWindowRect(IntPtr hwnd, int[] rect);[DllImport(\"user32.dll\")]public static extern void GetClientRect(IntPtr hwnd, int[] rect);[DllImport(\"user32.dll\")]public static extern void GetMonitorInfoW(IntPtr hMonitor, int[] lpmi);[DllImport(\"user32.dll\")]public static extern IntPtr MonitorFromWindow(IntPtr hwnd, int dwFlags);[DllImport(\"user32.dll\")]public static extern int SetWindowPos(IntPtr hwnd, IntPtr hwndAfterZ, int x, int y, int w, int h, int flags);';$PROCESS_PER_MONITOR_DPI_AWARE=2;try {$w::SetProcessDpiAwareness($PROCESS_PER_MONITOR_DPI_AWARE)} catch {$w::SetProcessDPIAware()}$hwnd=$w::GetConsoleWindow();$moninf=[int[]]::new(10);$moninf[0]=40;$MONITOR_DEFAULTTONEAREST=2;$w::GetMonitorInfoW($w::MonitorFromWindow($hwnd, $MONITOR_DEFAULTTONEAREST), $moninf);$monwidth=$moninf[7] - $moninf[5];$monheight=$moninf[8] - $moninf[6];$wrect=[int[]]::new(4);$w::GetWindowRect($hwnd, $wrect);$winwidth=$wrect[2] - $wrect[0];$winheight=$wrect[3] - $wrect[1];$x=[int][math]::Round($moninf[5] + $monwidth / 2 - $winwidth / 2);$y=[int][math]::Round($moninf[6] + $monheight / 2 - $winheight / 2);$SWP_NOSIZE=0x0001;$SWP_NOZORDER=0x0004;exit [int]($w::SetWindowPos($hwnd, [IntPtr]::Zero, $x, $y, 0, 0, $SWP_NOSIZE -bOr $SWP_NOZORDER) -eq 0)"
+EXIT /b
+
+:CLEANUPANDEXIT
+RD "%ProgramData%\InitialSetup" /S /Q>nul
+(GOTO) 2>nul&DEL "%~f0">nul&EXIT
+EXIT /b
