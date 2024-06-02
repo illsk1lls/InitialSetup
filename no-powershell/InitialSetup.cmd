@@ -1,7 +1,7 @@
 @ECHO OFF
 REM Request admin if not
->nul 2>&1 reg add hkcu\software\classes\.InitSetup\shell\runas\command /f /ve /d "cmd /x /d /r set \"f0=%%2\"& call \"%%2\" %%3"& set _= %*
->nul 2>&1 fltmc|| if "%f0%" neq "%~f0" (cd.>"%ProgramData%\runas.InitSetup" & start "%~n0" /high "%ProgramData%\runas.InitSetup" "%~f0" "%_:"=""%" & exit /b)
+>nul 2>&1 reg add hkcu\software\classes\.InitSetup\shell\runas\command /f /ve /d "cmd /x /d /r set \"f0=%%2\"& call \"%%2\" %%3"
+>nul 2>&1 fltmc|| if "%f0%" neq "%~f0" (cd.>"%ProgramData%\runas.InitSetup" & start "%~n0" /high "%ProgramData%\runas.InitSetup" "%~f0" & exit /b)
 REM Exit here if admin not approved
 >nul 2>&1 reg delete hkcu\software\classes\.InitSetup\ /f &>nul 2>&1 del %ProgramData%\runas.InitSetup /f /q
 REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
