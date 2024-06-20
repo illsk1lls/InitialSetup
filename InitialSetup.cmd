@@ -233,10 +233,17 @@ CALL :CLEANUPANDEXIT
 
 :SETTERMINAL
 SET "LEGACY={B23D10C0-E52E-411E-9D5B-C09FDF709C7D}"
+SET "LETWIN={00000000-0000-0000-0000-000000000000}"
 SET "TERMINAL={2EACA947-7F5F-4CFA-BA87-8F7FBEEFBE69}"
 SET "TERMINAL2={E12CFF52-A866-4C77-9A90-F570A7AA2C6B}"
-POWERSHELL -nop -c "Get-WmiObject -Class Win32_OperatingSystem | Select -ExpandProperty Caption | Find 'Windows 11'">nul && (
+POWERSHELL -nop -c "Get-WmiObject -Class Win32_OperatingSystem | Select -ExpandProperty Caption | Find 'Windows 11'">nul
+IF ERRORLEVEL 0 (
 	SET isEleven=1
+	>nul 2>&1 REG QUERY "HKCU\Console\%%%%Startup" /v DelegationConsole
+	IF ERRORLEVEL 1 (
+		REG ADD "HKCU\Console\%%%%Startup" /v DelegationConsole /t REG_SZ /d "%LETWIN%" /f>nul
+		REG ADD "HKCU\Console\%%%%Startup" /v DelegationTerminal /t REG_SZ /d "%LETWIN%" /f>nul
+	)
 	FOR /F "usebackq tokens=3" %%# IN (`REG QUERY "HKCU\Console\%%%%Startup" /v DelegationConsole 2^>nul`) DO (
 		IF NOT "%%#"=="%LEGACY%" (
 			SET "DEFAULTCONSOLE=%%#"
