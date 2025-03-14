@@ -1,6 +1,4 @@
 @ECHO OFF
-REM Enter local time zone on next line, (In cmd prompt, tzutil.exe /L will give you a list of available timezones, each zone is listed with 2 lines, the 2nd line without parenthesis of text only is what you want to put here in quotes.)
-SET TZNAME="Eastern Standard Time"
 REM Allow only one instance at a time
 TASKLIST /V /NH /FI "imagename eq cmd.exe"|FINDSTR /I /C:"Initial Setup">nul
 IF NOT %errorlevel%==1 (
@@ -34,17 +32,23 @@ REM Script stops here if admin request is declined
 CALL :CENTERWINDOW
 REM InitialSetup can be run two ways. Use the GUI to select Normal or Business modes (For example purposes only, use this template to suit your needs)
 ECHO USE THE GUI TO BEGIN
-FOR /F "usebackq tokens=*" %%# IN (`POWERSHELL -nop -c "Add-Type -AssemblyName System.Windows.Forms;$^ = New-Object system.Windows.Forms.Form;$^.ClientSize='170,90';$^.BackColor='#AAAAAA';$^.FormBorderStyle='none';$^.TopMost='true';$L=New-Object system.Windows.Forms.ComboBox;$L.width=114;$L.autosize=$true;@('Normal Mode','Business Mode')|ForEach-Object{[void] $L.Items.Add($_)};$L.SelectedIndex=0;$L.DropDownStyle='DropDownList';$L.location=New-Object System.Drawing.Point(28,19);$G=New-Object System.Windows.Forms.Button;$G.Location=New-Object System.Drawing.Size(28,55);$G.Size=New-Object System.Drawing.Size(40,22);$G.Text='Go';$G.Add_Click({$^.Close();write-host ($L.SelectedIndex)});$Q=New-Object System.Windows.Forms.Button;$Q.Location=New-Object System.Drawing.Size(103,55);$Q.Size=New-Object System.Drawing.Size(40,22);$Q.Text='Exit';$Q.Add_Click({$^.Close();Write-Host 2});$^.Controls.Add($G);$^.Controls.Add($Q);$^.Controls.Add($L);$^.StartPosition=[System.Windows.Forms.FormStartPosition]::CenterScreen;[void]$^.ShowDialog()"`) DO (
-	SET /A RUNMODE=%%#
-	CLS
+FOR /F "usebackq tokens=*" %%# IN (`POWERSHELL -nop -c "Add-Type -AssemblyName System.Windows.Forms;$f = New-Object System.Windows.Forms.Form;$f.ClientSize='220,130';$f.BackColor='#AAAAAA';$f.FormBorderStyle='none';$f.TopMost='true';$tz = New-Object System.Windows.Forms.ComboBox;$tz.Width=164;$tz.AutoSize=$true;$tzList = (tzutil /l | Where-Object {$_ -match '^\s*[^\(]'} | ForEach-Object {$_ -replace '^\s*',''});$tzList | ForEach-Object {[void] $tz.Items.Add($_)};$currentTZ = (tzutil /g);$tz.SelectedIndex = $tzList.IndexOf($currentTZ);if ($tz.SelectedIndex -eq -1) {$tz.SelectedIndex = 0};$tz.DropDownStyle='DropDownList';$tz.Location=New-Object System.Drawing.Point(28,55);$m = New-Object System.Windows.Forms.ComboBox;$m.Width=114;$m.AutoSize=$true;@('Normal Mode','Business Mode') | ForEach-Object {[void] $m.Items.Add($_)};$m.SelectedIndex=0;$m.DropDownStyle='DropDownList';$m.Location=New-Object System.Drawing.Point(53,19);$g = New-Object System.Windows.Forms.Button;$g.Location=New-Object System.Drawing.Size(28,90);$g.Size=New-Object System.Drawing.Size(40,22);$g.Text='Go';$g.Add_Click({$f.Close();Write-Host ($tz.SelectedItem + '|' + $m.SelectedIndex)});$q = New-Object System.Windows.Forms.Button;$q.Location=New-Object System.Drawing.Size(150,90);$q.Size=New-Object System.Drawing.Size(40,22);$q.Text='Exit';$q.Add_Click({$f.Close();Write-Host 'EXIT|2'});$f.Controls.Add($g);$f.Controls.Add($q);$f.Controls.Add($tz);$f.Controls.Add($m);$f.StartPosition=[System.Windows.Forms.FormStartPosition]::CenterScreen;[void]$f.ShowDialog()"`) DO (
+    SET "GUI_OUTPUT=%%#"
+	SETLOCAL ENABLEDELAYEDEXPANSION
+    FOR /F "tokens=1,2 delims=|" %%A IN ("!GUI_OUTPUT!") DO (
+		ENDLOCAL
+        SET TZNAME="%%A"
+        SET /A "RUNMODE=%%B"
+    )
+    CLS
 )
 IF "%RUNMODE%"=="2" (
 	CALL :CLEANUPANDEXIT
 )
 IF "%RUNMODE%"=="1" (
-	TITLE Initial Setup for Business v1.1
+	TITLE Initial Setup for Business v1.2
 ) ELSE (
-	TITLE Initial Setup v1.1
+	TITLE Initial Setup v1.2
 )
 IF EXIST "%ProgramData%\InitialSetup" (
 	RD "%ProgramData%\InitialSetup" /S /Q>nul
