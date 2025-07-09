@@ -217,7 +217,7 @@ IF "%RUNMODE%"=="1" (
 	REM Non-Business Example Section
 	ECHO/
 	ECHO Starting Malwarebytes Download...
-	"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.malwarebytes.com/api/downloads/mb-windows?filename=MBSetup.exe
+	"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://data-cdn.mbamupdates.com/web/mb5-setup-consumer/MBSetup.exe
 	ECHO/
 	ECHO Installing Malwarebytes...
 	START /WAIT "" "%ProgramData%\InitialSetup\MBSetup.exe" /verysilent /norestart
