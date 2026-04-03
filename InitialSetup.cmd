@@ -162,7 +162,7 @@ ECHO/
 ECHO Preparing for Software Downloads...
 PUSHD "%ProgramData%\InitialSetup"
 PUSHD "%ProgramData%\InitialSetup\Junkbin"
-POWERSHELL -nop -c "Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -o '7zr.exe'"; "Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2300-extra.7z -o '7zExtra.7z'"; "Invoke-WebRequest -Uri https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip -o 'Aria2c.zip'"
+POWERSHELL -nop -c "Invoke-WebRequest -Uri https://www.7-zip.org/a/7zr.exe -o '7zr.exe'"; "Invoke-WebRequest -Uri https://www.7-zip.org/a/7z2301-extra.7z -o '7zExtra.7z'"; "Invoke-WebRequest -Uri https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip -o 'Aria2c.zip'"
 7zr.exe e -y 7zExtra.7z>nul
 7za.exe e Aria2c.zip Aria2c.exe -r>nul
 MOVE 7za.* ..>nul
@@ -170,10 +170,10 @@ MOVE Aria2c.exe ..>nul
 POPD
 ECHO/
 ECHO Starting 7-Zip Download...
-"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.7-zip.org/a/7z2300-x64.exe
+"%ProgramData%\InitialSetup\aria2c.exe" --summary-interval=0 https://www.7-zip.org/a/7z2301-x64.exe
 ECHO/
 ECHO Installing 7-Zip...
-START /WAIT "" "%ProgramData%\InitialSetup\7z2300-x64.exe" /S
+START /WAIT "" "%ProgramData%\InitialSetup\7z2301-x64.exe" /S
 ECHO/
 ECHO Complete!
 ECHO/
